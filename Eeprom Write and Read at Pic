@@ -1,0 +1,26 @@
+void ee_write(uint16_t addr, uint8_t val) {
+   EEADRH = addr >> 8;
+   EEADR = addr & 0xFF;
+   EEDATA = val;
+   EECON1bits.EEPGD = 0;
+   EECON1bits.CFGS = 0;
+   EECON1bits.WREN = 1;
+   uint8_t backup = INTCONbits.GIE;
+   INTCONbits.GIE = 0; // Disable interrupts
+   EECON2 = 0x55;
+   EECON2 = 0xAA;
+   EECON1bits.WR = 1;
+   // Wait for write to complete
+   while (EECON1bits.WR);
+   EECON1bits.WREN = 0;
+   INTCONbits.GIE = backup;
+}
+uint8_t ee_read(uint16_t addr) {
+   EECON1 = 0;
+   EEADRH = addr >> 8;
+   EEADR = addr;
+   EECON1bits.RD = 1;
+   NOP(); // NOPs may be required for latency at high frequencies
+  NOP();
+  return EEDATA;
+}
